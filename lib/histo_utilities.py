@@ -209,23 +209,18 @@ def create_TH2D(sample, name='h', title=None, binning=[None, None, None, None, N
     h.binning = binning
     return h
 
-def rootTH1_to_np(h, cut = None, Norm = False):
+def rootTH1_to_np(h, Norm = False):
     nx = h.GetNbinsX()
 
     arr = np.zeros(nx)
-    pos = np.zeros((ny, nx, 2)) 
+    pos = np.zeros(nx)
 
     for ix in range(nx):
-        for iy in range(ny):
-            x = h.GetXaxis().GetBinCenter( ix+1 );
-            y = h.GetYaxis().GetBinCenter( iy+1 );
-            z = h.GetBinContent(h.GetBin(ix+1, iy+1))
+        x = h.GetXaxis().GetBinCenter( ix+1 )
+        y = h.GetBinContent(ix+1)
 
-            if cut == None:
-                arr[iy, ix] = z
-            else:
-                arr[iy, ix] = z if z > cut else 0
-            pos[iy, ix] = [x,y]
+        arr[ix] = y
+        pos[ix] = x
     return arr, pos
 
 def rootTH2_to_np(h, cut = None, Norm = False):
@@ -321,6 +316,113 @@ def make_ratio_plot(h_list_in, title = "", label = "", in_tags = None, ratio_bou
             h.Divide(h_list[0])
             h.DrawCopy("same"+draw_opt)
         c_out.h_ratio_list.append(h)
+
+        ln = rt.TLine(h.GetXaxis().GetXmin(), 1, h.GetXaxis().GetXmax(), 1)
+        ln.SetLineWidth(3)
+        ln.SetLineColor(h_list_in[0].GetLineColor())
+        ln.DrawLine(h.GetXaxis().GetXmin(), 1, h.GetXaxis().GetXmax(), 1)
+
+
+    pad2.Update()
+
+    c_out.pad1 = pad1
+    c_out.pad2 = pad2
+    c_out.h_list = h_list
+    c_out.leg = leg
+
+    return c_out
+
+def make_effiency_plot(h_list_in, title = "", label = "", in_tags = None, ratio_bounds = [0.1, 4], draw_opt = 'P'):
+    h_list = []
+    if in_tags == None:
+        tag = []
+    else:
+        tag = in_tags
+    for i, h in enumerate(h_list_in):
+        h_list.append(h.Clone('h{}aux{}'.format(i, label)))
+        if in_tags == None:
+            tag.append(h.GetTitle())
+
+    c_out = rt.TCanvas("c_out_ratio"+label, "c_out_ratio"+label, 600, 800)
+    pad1 = rt.TPad("pad1", "pad1", 0, 0.3, 1, 1.0)
+    pad1.SetBottomMargin(0.03)
+    pad1.SetLeftMargin(0.15)
+    # pad1.SetGridx()
+    pad1.Draw()
+    pad1.cd()
+
+    leg = rt.TLegend(0.6, 0.7, 0.9, 0.9)
+    leg.SetBorderSize(0)
+    leg.SetFillStyle(0)
+    c_out.cd(1)
+
+    for i, h in enumerate(h_list):
+        if i == 0:
+            h.GetXaxis().SetLabelSize(0)
+            h.GetXaxis().SetTitle("")
+            # h.GetYaxis().SetRangeUser(0, 1.05*max(map(lambda x: x.GetMaximum(), h_list)))
+            h.GetYaxis().SetTitleOffset(1.5)
+            h.GetYaxis().SetTitleSize(0.05)
+            h.GetYaxis().SetLabelSize(0.05)
+            h.SetTitle(title)
+            h.DrawCopy(draw_opt)
+        else:
+            h.DrawCopy(draw_opt+"same")
+
+        leg.AddEntry(h, tag[i], "lep")
+
+    leg.Draw("same")
+
+    c_out.cd()
+    pad2 = rt.TPad("pad2", "pad2", 0, 0, 1, 0.3)
+    pad2.SetTopMargin(0.03)
+    pad2.SetBottomMargin(0.25)
+    pad2.SetLeftMargin(0.15)
+    # pad2.SetGrid()
+    pad2.Draw()
+    pad2.cd()
+
+    c_out.h_ratio_list = []
+    c_out.teff_list = []
+    for i, h in enumerate(h_list):
+        if i == 0:
+            continue
+        else:
+            h_aux = h.Clone('h_aux'+str(i))
+            h_aux.Add(h, h_list[0])
+
+            teff = rt.TEfficiency(h, h_aux)
+            teff.SetStatisticOption(rt.TEfficiency.kFCP)
+            teff.SetLineColor(h.GetLineColor())
+            teff.SetLineWidth(h.GetLineWidth())
+            teff.SetTitle(' ;'+h_list[0].GetXaxis().GetTitle()+';Ratio w/ {};'.format(tag[0]))
+
+            if i == 1:
+                teff.Draw('A'+draw_opt)
+
+                rt.gPad.Update()
+                graph = teff.GetPaintedGraph()
+                graph.GetYaxis().SetTitleOffset(0.6)
+                graph.GetYaxis().SetLimits(ratio_bounds[0], ratio_bounds[1])
+
+                w = h.GetBinWidth(1)*0.5
+                graph.GetXaxis().SetLimits(h.GetBinCenter(1)-w, h.GetBinCenter(h.GetNbinsX())+w)
+
+                graph.GetYaxis().SetTitleSize(0.12)
+                graph.GetYaxis().SetLabelSize(0.12)
+                graph.GetYaxis().SetNdivisions(506)
+
+                graph.GetXaxis().SetNdivisions(506)
+                graph.GetXaxis().SetTitleOffset(0.95)
+                graph.GetXaxis().SetTitleSize(0.12)
+                graph.GetXaxis().SetLabelSize(0.12)
+                graph.GetXaxis().SetTickSize(0.07)
+
+            else:
+                teff.Draw(draw_opt)
+
+        c_out.h_ratio_list.append(h)
+        c_out.teff_list.append(teff)
 
         ln = rt.TLine(h.GetXaxis().GetXmin(), 1, h.GetXaxis().GetXmax(), 1)
         ln.SetLineWidth(3)
