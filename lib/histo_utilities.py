@@ -54,7 +54,7 @@ def create_TH1D(x, name='h', title=None, binning=[None, None, None], weights=Non
     if title is None:
         title = name
     if (x.shape[0] == 0):
-        print 'Empty sample'
+        # print 'Empty sample while creating TH1D'
         h = rt.TH1D(name, title, 1, 0, 1)
     elif not h2clone is None:
         h = h2clone.Clone(name)
@@ -332,7 +332,7 @@ def make_ratio_plot(h_list_in, title = "", label = "", in_tags = None, ratio_bou
 
     return c_out
 
-def make_effiency_plot(h_list_in, title = "", label = "", in_tags = None, ratio_bounds = [0.1, 4], draw_opt = 'P'):
+def make_effiency_plot(h_list_in, title = "", label = "", in_tags = None, ratio_bounds = [None, None], draw_opt = 'P'):
     h_list = []
     if in_tags == None:
         tag = []
@@ -343,10 +343,10 @@ def make_effiency_plot(h_list_in, title = "", label = "", in_tags = None, ratio_
         if in_tags == None:
             tag.append(h.GetTitle())
 
-    c_out = rt.TCanvas("c_out_ratio"+label, "c_out_ratio"+label, 600, 800)
+    c_out = rt.TCanvas("c_out_ratio"+label, "c_out_ratio"+label, 600, 600)
     pad1 = rt.TPad("pad1", "pad1", 0, 0.3, 1, 1.0)
     pad1.SetBottomMargin(0.03)
-    pad1.SetLeftMargin(0.15)
+    pad1.SetLeftMargin(0.13)
     # pad1.SetGridx()
     pad1.Draw()
     pad1.cd()
@@ -361,7 +361,7 @@ def make_effiency_plot(h_list_in, title = "", label = "", in_tags = None, ratio_
             h.GetXaxis().SetLabelSize(0)
             h.GetXaxis().SetTitle("")
             # h.GetYaxis().SetRangeUser(0, 1.05*max(map(lambda x: x.GetMaximum(), h_list)))
-            h.GetYaxis().SetTitleOffset(1.5)
+            h.GetYaxis().SetTitleOffset(1.1)
             h.GetYaxis().SetTitleSize(0.05)
             h.GetYaxis().SetLabelSize(0.05)
             h.SetTitle(title)
@@ -376,8 +376,8 @@ def make_effiency_plot(h_list_in, title = "", label = "", in_tags = None, ratio_
     c_out.cd()
     pad2 = rt.TPad("pad2", "pad2", 0, 0, 1, 0.3)
     pad2.SetTopMargin(0.03)
-    pad2.SetBottomMargin(0.25)
-    pad2.SetLeftMargin(0.15)
+    pad2.SetBottomMargin(0.27)
+    pad2.SetLeftMargin(0.13)
     # pad2.SetGrid()
     pad2.Draw()
     pad2.cd()
@@ -395,15 +395,18 @@ def make_effiency_plot(h_list_in, title = "", label = "", in_tags = None, ratio_
             teff.SetStatisticOption(rt.TEfficiency.kFCP)
             teff.SetLineColor(h.GetLineColor())
             teff.SetLineWidth(h.GetLineWidth())
-            teff.SetTitle(' ;'+h_list[0].GetXaxis().GetTitle()+';Ratio w/ {};'.format(tag[0]))
+            teff.SetTitle(' ;'+h_list_in[0].GetXaxis().GetTitle()+';#varepsilon w/ {};'.format(tag[0]))
 
             if i == 1:
                 teff.Draw('A'+draw_opt)
 
                 rt.gPad.Update()
                 graph = teff.GetPaintedGraph()
-                graph.GetYaxis().SetTitleOffset(0.6)
-                graph.GetYaxis().SetLimits(ratio_bounds[0], ratio_bounds[1])
+                graph.GetYaxis().SetTitleOffset(0.5)
+                if not ratio_bounds[0] == None:
+                    graph.GetHistogram().SetMinimum(ratio_bounds[0])
+                if not ratio_bounds[1] == None:
+                    graph.GetHistogram().SetMaximum(ratio_bounds[1])
 
                 w = h.GetBinWidth(1)*0.5
                 graph.GetXaxis().SetLimits(h.GetBinCenter(1)-w, h.GetBinCenter(h.GetNbinsX())+w)
@@ -423,12 +426,6 @@ def make_effiency_plot(h_list_in, title = "", label = "", in_tags = None, ratio_
 
         c_out.h_ratio_list.append(h)
         c_out.teff_list.append(teff)
-
-        ln = rt.TLine(h.GetXaxis().GetXmin(), 1, h.GetXaxis().GetXmax(), 1)
-        ln.SetLineWidth(3)
-        ln.SetLineColor(h_list_in[0].GetLineColor())
-        ln.DrawLine(h.GetXaxis().GetXmin(), 1, h.GetXaxis().GetXmax(), 1)
-
 
     pad2.Update()
 
