@@ -149,5 +149,5 @@ aux = [lumi, xsec_BSM] + list(np.percentile(p_val_test, [2.5, 16, 50, 84, 97.5])
 aux = np.array(aux)
 print(aux)
 out_name = '../data/ModelIndepAnalysis/pVal_'
-out_name += name_BSM + '{:1.2e}'.format(xsec_BSM) + 'pb' + '_L' + str(lumi) + 'pb-1_wEff.npy'
+out_name += name_BSM + '{:1.2e}'.format(xsec_BSM) + 'pb' + '_L{:.0f}pb-1.npy'.format(lumi)
 np.save(out_name, aux)
