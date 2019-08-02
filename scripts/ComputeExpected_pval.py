@@ -16,7 +16,7 @@ name_BSM = args.nBSM
 xsec_BSM = args.xsecBSM
 
 lumi = args.lumi
-N_asymov = 10000
+N_asymov = 20000
 # N_asymov = int(1 / (1 - erf(5.5/np.sqrt(2))))
 N_exp_per_xsec = 300
 
@@ -43,7 +43,7 @@ def getSelection(x_Mjj, x_loss):
     cut = gbr_cut.predict(np.reshape(x_Mjj, (-1,1)))
     return x_loss > cut
 
-def HypotesisTets(h_a_bin_content, h_r_bin_content, eff, N_asymov = 10000, max_N_asymov = 1e8):
+def HypotesisTets(h_a_bin_content, h_r_bin_content, eff, N_asymov = 10000, max_N_asymov = 2e8, N_min = 10):
     nu = eff*h_r_bin_content/(1-eff)
 
     probs_obs = sp.stats.poisson.pmf(h_a_bin_content.astype(np.int), nu)
@@ -54,11 +54,14 @@ def HypotesisTets(h_a_bin_content, h_r_bin_content, eff, N_asymov = 10000, max_N
     N_worse = 0
     N_tot = 0
     loops = 0
-    while N_worse < 25 and N_tot < max_N_asymov:
+    while N_worse < N_min and N_tot < max_N_asymov:
         loops += 1
         if loops > 1 and loops%10 == 0:
             print(N_tot, N_worse)
         if loops == 10:
+            print('Increasing by a factor 5 the number of asymov per loop')
+            N_asymov *=5
+        if loops == 50:
             print('Increasing by a factor 5 the number of asymov per loop')
             N_asymov *=5
         o_asymov = np.random.poisson(nu, (N_asymov, nu.shape[0]))
@@ -70,7 +73,7 @@ def HypotesisTets(h_a_bin_content, h_r_bin_content, eff, N_asymov = 10000, max_N
         N_worse += np.sum(s_asymov > s_obs)
         N_tot += N_asymov
 
-        if max_N_asymov/N_tot < 25 and (N_worse * (max_N_asymov/N_tot) < 25):
+        if max_N_asymov/N_tot < N_min and (N_worse * (max_N_asymov/N_tot) < N_min):
             print('Will never have enough stat - giving up.')
             p_val = max(1, N_worse)/float(N_tot)
             return p_val
@@ -148,6 +151,7 @@ for i_exp in range(N_exp_per_xsec):
 aux = [lumi, xsec_BSM] + list(np.percentile(p_val_test, [2.5, 16, 50, 84, 97.5]))
 aux = np.array(aux)
 print(aux)
-out_name = '../data/ModelIndepAnalysis/pVal_'
+out_name = '../data/ModelIndepAnalysis/pVal_v190802/pVal_'
 out_name += name_BSM + '{:1.2e}'.format(xsec_BSM) + 'pb' + '_L{:.0f}pb-1.npy'.format(lumi)
 np.save(out_name, aux)
+print('\n\n================ DONE ================\n')

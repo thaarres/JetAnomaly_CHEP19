@@ -27,7 +27,7 @@ if __name__ == "__main__":
     maxRunTime = int(args.maxtime[:-1]) * time_scale[args.maxtime[-1]]
 
     for nBSM in ['AtoZZZ', 'GtoWW', 'GtoBtt', 'GtoNtt']:
-        for xsecBSM in np.logspace(-1.2, 1.5, 8):
+        for xsecBSM in np.logspace(-1.2, 1.2, 15):
             subname = 'sub{}{:1.2e}.sub'.format(nBSM, xsecBSM)
             fsub = open(subname, 'w')
             fsub.write('executable    = /afs/cern.ch/user/o/ocerri/cernbox/JetAnomaly/scripts/condorJob.sh')
