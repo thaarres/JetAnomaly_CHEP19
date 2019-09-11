@@ -332,7 +332,7 @@ def make_ratio_plot(h_list_in, title = "", label = "", in_tags = None, ratio_bou
 
     return c_out
 
-def make_effiency_plot(h_list_in, title = "", label = "", in_tags = None, ratio_bounds = [None, None], draw_opt = 'P'):
+def make_effiency_plot(h_list_in, title = "", label = "", in_tags = None, ratio_bounds = [None, None], draw_opt = 'P', canvas_size=(600,600)):
     h_list = []
     if in_tags == None:
         tag = []
@@ -343,7 +343,7 @@ def make_effiency_plot(h_list_in, title = "", label = "", in_tags = None, ratio_
         if in_tags == None:
             tag.append(h.GetTitle())
 
-    c_out = rt.TCanvas("c_out_ratio"+label, "c_out_ratio"+label, 600, 600)
+    c_out = rt.TCanvas("c_out_ratio"+label, "c_out_ratio"+label, canvas_size[0], canvas_size[1])
     pad1 = rt.TPad("pad1", "pad1", 0, 0.3, 1, 1.0)
     pad1.SetBottomMargin(0.03)
     pad1.SetLeftMargin(0.13)
