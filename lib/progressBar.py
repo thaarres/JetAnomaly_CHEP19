@@ -13,6 +13,7 @@ class ProgressBar():
 
         self.maxPrintoutLen = 0
         self.showEvery = showEvery
+        self.lastShown = showEvery+1
 
     def show(self, entry, tail_label = ''):
         if entry%self.setpSize==0 or time.time() - self.lastShown > self.showEvery:
